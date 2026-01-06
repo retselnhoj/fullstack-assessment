@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 
 
 builder.Services.AddControllers()
@@ -22,8 +23,16 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-var app = builder.Build();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy => policy.WithOrigins(allowedOrigins)
+                        .AllowAnyHeader()
+                        .AllowAnyMethod());
+});
 
+var app = builder.Build();
+app.UseCors("AllowFrontend"); 
 
 if (app.Environment.IsDevelopment())
 {
