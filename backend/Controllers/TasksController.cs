@@ -29,9 +29,17 @@ namespace TaskManager.API
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] TaskItem task)
         {
-            
+            // Check if user exists
+            var userExists = await _context.Users.AnyAsync(u => u.Id == task.UserId);
+            if (!userExists)
+            {
+                return BadRequest("User does not exist.");
+            }
+            // Save task
             _context.Tasks.Add(task);
             await _context.SaveChangesAsync();
+
+            // Return response
             return CreatedAtAction(nameof(Get), new { id = task.Id }, task);
         }
 
